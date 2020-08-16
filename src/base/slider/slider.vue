@@ -3,7 +3,9 @@
     <div class="slider-group" ref="sliderGroup">
       <slot></slot>
     </div>
-    <div class="dots"></div>
+    <div class="dots">
+      <span class="dot" v-for="(item, key) in dots" :class="{active: key === currentDotIndex}" :key="key"></span>
+    </div>
   </div>
 </template>
 
@@ -12,6 +14,7 @@ import { addClass } from 'common/js/dom'
 import BScroll from 'better-scroll'
 
 export default {
+  name: 'slider',
   props: {
     // loop play
     loop: {
@@ -31,11 +34,32 @@ export default {
       default: 4000
     }
   },
+  data() {
+    return {
+      dots: [],
+      currentDotIndex: 0
+    }
+  },
   mounted() {
     setTimeout(() => {
       this.setSliderWidth()
+      this.initDots()
       this.initSlider()
+
+      if (this.auto === true) {
+        this.autoPlay()
+      }
     }, 20)
+
+    // Recalculate slider size if screen size changed
+    window.addEventListener('resize', () => {
+      if (!this.slider) {
+        return
+      }
+
+      this.setSliderWidth(true)
+      this.slider.refresh()
+    })
   },
   methods: {
     initSlider() {
@@ -47,11 +71,23 @@ export default {
           threshold: 0.3,
           speed: 400
         },
-        click: true,
         momentum: false
       })
+
+      this.slider.on('scrollEnd', () => {
+        this.currentDotIndex = this.slider.getCurrentPage().pageX
+        if (this.auto === true) {
+          this.autoPlay()
+        }
+      })
+
+      this.slider.on('beforeScrollStart', () => {
+        if (this.autoPlay) {
+          clearTimeout(this.timer)
+        }
+      })
     },
-    setSliderWidth() {
+    setSliderWidth(isResize) {
       this.children = this.$refs.sliderGroup.children
 
       let width = 0
@@ -64,11 +100,28 @@ export default {
         width += sliderWidth
       }
 
-      if (this.loop) {
+      if (this.loop && !isResize) {
         width += sliderWidth * 2
       }
 
       this.$refs.sliderGroup.style.width = width + 'px'
+    },
+    initDots() {
+      let sliderCount = this.children.length
+      // Remove two extra sliders for loop.
+      if (this.loop) {
+        sliderCount -= 2
+      }
+      this.dots = new Array(sliderCount)
+    },
+    autoPlay() {
+      let nextPageIndex = this.currentDotIndex + 1
+      if (!this.loop) {
+        nextPageIndex -= 1
+      }
+      this.timer = setTimeout(() => {
+        this.slider.goToPage(nextPageIndex, 0, 200)
+      }, this.interval)
     }
   }
 }
@@ -97,7 +150,7 @@ export default {
           display: block
           width: 100%
     .dots
-      position: absolute
+      position: relative
       right: 0
       left: 0
       bottom: 12px
