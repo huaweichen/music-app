@@ -6,11 +6,6 @@ import { commonParams } from './config'
  */
 export function getRecommend() {
   const params = Object.assign({}, commonParams, {
-    sign: 'zzaerk4569b2849uff15c4441255ee9ef959d8dacccc3f88',
-    loginUin: 0,
-    hostUin: 0,
-    platform: 'yqq.json',
-    needNewCode: 0,
     data: {
       comm: { ct: 24 },
       category: { method: 'get_hot_category', param: { qq: '' }, module: 'music.web_category_svr' },
@@ -32,5 +27,24 @@ export function getRecommend() {
     params
   }).then((res) => {
     return res
+  })
+}
+
+export function getPlaylist () {
+  const url = '/api/getPlaylist'
+
+  const params = Object.assign({}, commonParams, {
+    rnd: Math.random(),
+    picmid: 1,
+    categoryId: 10000000,
+    sortId: 5,
+    sin: 0,
+    ein: 19
+  })
+
+  return axios.get(url, {
+    params
+  }).then((res) => {
+    return Promise.resolve(res.data)
   })
 }

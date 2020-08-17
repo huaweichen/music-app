@@ -8,7 +8,11 @@ export const commonParams = {
   inCharset: 'utf-8',
   outCharset: 'utf-8',
   notice: 0,
-  format: 'json'
+  format: 'json',
+  loginUin: 0,
+  hostUin: 0,
+  platform: 'yqq.json',
+  needNewCode: 0
 }
 
 /**

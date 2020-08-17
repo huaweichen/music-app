@@ -10,17 +10,7 @@ module.exports = {
 
   devServer: {
     before(app) {
-      // LastFM
-      app.get('/api/getLastFmRecommendTracks', (req, res) => {
-        const url = 'http://ws.audioscrobbler.com/2.0/?method=tag.gettoptracks&tag=disco&api_key=' + LAST_FM_API_KEY + '&format=json'
-        axios.get(url).then((response) => {
-          res.send(response.data)
-        }).catch((e) => {
-          console.log(e)
-        })
-      })
-
-      // QQ Music
+      // QQ Music get recommend tracks
       app.get('/api/getQQRecommendTracks', (req, res) => {
         const url = 'https://u.y.qq.com/cgi-bin/musicu.fcg'
         // Jump to different URL based on "jumptype"
@@ -38,8 +28,6 @@ module.exports = {
           params: req.query
         }).then((response) => {
           response = response.data
-          console.log(response.focus.code)
-          console.log(response.focus.data.shelf.v_niche[0].v_card)
 
           // Err OK === 0
           if (response.code === 0) {
@@ -65,6 +53,30 @@ module.exports = {
             })
           } else {
             res.json(response)
+          }
+        }).catch((e) => {
+          console.log(e)
+        })
+      })
+
+      // QQ Music Get play list
+      app.get('/api/getPlaylist', (req, res) => {
+        const url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
+
+        axios.get(url, {
+          headers: {
+            origin: 'https://y.qq.com',
+            referer: 'https://y.qq.com',
+            host: 'y.qq.com'
+          },
+          params: req.query
+        }).then((response) => {
+          const data = response.data
+
+          if (data.code === 0 && data.data.list.length > 0) {
+            res.json({ list: data.data.list })
+          } else {
+            res.json(data)
           }
         }).catch((e) => {
           console.log(e)

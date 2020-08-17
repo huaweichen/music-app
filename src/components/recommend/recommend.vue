@@ -1,44 +1,71 @@
 <template>
   <div class="recommend">
-    <div class="recommend-content">
-      <div v-if="recommends.length > 0" class="slide-wrapper">
-        <slider>
-          <div v-for="recommend in recommends" :key="recommend.id">
-            <a :href="recommend.linkUrl">
-              <img :src="recommend.picUrl" :alt="recommend.name">
-            </a>
-          </div>
-        </slider>
+    <scroll ref="scroll" class="recommend-content" :data="playlist">
+      <div>
+        <div v-if="recommends.length > 0" class="slide-wrapper">
+          <slider>
+            <div v-for="(recommend, index) in recommends" :key="index">
+              <a :href="recommend.linkUrl">
+                <img :src="recommend.picUrl" :alt="recommend.name">
+              </a>
+            </div>
+          </slider>
+        </div>
+        <div class="recommend-list">
+          <h1 class="list-title">热门歌单推荐</h1>
+          <ul>
+            <li v-for="(item, index) in playlist" class="item" :key="index">
+              <div class="icon">
+                <img @load="loadImage" :src="item.imgurl" :alt="item.dissname" height="60" width="60">
+              </div>
+              <div class="text">
+                <h2 class="name">{{item.creator.name}}</h2>
+                <p class="desc">{{item.dissname}}</p>
+              </div>
+            </li>
+          </ul>
+        </div>
       </div>
-      <div class="recommend-list">
-        <h1 class="list-title">热门歌单推荐</h1>
-        <ul></ul>
-      </div>
-    </div>
+    </scroll>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
-import { getRecommend } from '@/api/recommend'
+import { getRecommend, getPlaylist } from '@/api/recommend'
 import Slider from '@/base/slider/slider'
+import Scroll from '@/base/scroll/scroll'
 
 export default {
   data() {
     return {
-      recommends: []
+      recommends: [],
+      playlist: []
     }
   },
   components: {
-    Slider
+    Slider,
+    Scroll
   },
   created() {
     this._getRecommend()
+    this._getPlaylist()
   },
   methods: {
     _getRecommend() {
       getRecommend().then((res) => {
         this.recommends = res.data.sliders
       })
+    },
+    _getPlaylist() {
+      getPlaylist().then((res) => {
+        this.playlist = res.list
+      })
+    },
+    loadImage() {
+      if (!this.hasImageLoaded) {
+        this.$refs.scroll.refreshScroll()
+        this.hasImageLoaded = true
+      }
     }
   }
 }

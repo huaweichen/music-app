@@ -31,7 +31,7 @@ export default {
     // Loop interval (ms)
     interval: {
       type: Number,
-      default: 4000
+      default: 2000
     }
   },
   data() {
@@ -82,7 +82,7 @@ export default {
       })
 
       this.slider.on('beforeScrollStart', () => {
-        if (this.autoPlay) {
+        if (this.auto) {
           clearTimeout(this.timer)
         }
       })
@@ -107,21 +107,23 @@ export default {
       this.$refs.sliderGroup.style.width = width + 'px'
     },
     initDots() {
-      let sliderCount = this.children.length
-      // Remove two extra sliders for loop.
-      if (this.loop) {
-        sliderCount -= 2
-      }
-      this.dots = new Array(sliderCount)
+      this.dots = new Array(this.children.length)
     },
     autoPlay() {
-      let nextPageIndex = this.currentDotIndex + 1
-      if (!this.loop) {
-        nextPageIndex -= 1
+      let nextPageIndex = this.currentDotIndex
+      let mod = this.children.length
+
+      // Remove the two extra pic
+      if (this.loop) {
+        nextPageIndex += 1
+        mod = this.children.length - 2
       }
       this.timer = setTimeout(() => {
-        this.slider.goToPage(nextPageIndex, 0, 200)
+        this.slider.goToPage(nextPageIndex % mod, 0, 200)
       }, this.interval)
+    },
+    destroyed() {
+      clearTimeout(this.timer)
     }
   }
 }
