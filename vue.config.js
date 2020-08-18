@@ -1,7 +1,6 @@
 const path = require('path')
 const axios = require('axios')
 
-const LAST_FM_API_KEY = '77e87f4fc3b0fa3b2ea29999acab6f04'
 module.exports = {
   chainWebpack: (config) => {
     config.resolve.alias.set('@', path.join(__dirname, './src/'))
@@ -59,7 +58,7 @@ module.exports = {
         })
       })
 
-      // QQ Music Get play list
+      // QQ Music get play list
       app.get('/api/getPlaylist', (req, res) => {
         const url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
 
@@ -75,6 +74,26 @@ module.exports = {
 
           if (data.code === 0 && data.data.list.length > 0) {
             res.json({ list: data.data.list })
+          } else {
+            res.json(data)
+          }
+        }).catch((e) => {
+          console.log(e)
+        })
+      })
+
+      // QQ Music get singers
+      app.get('/api/getSingerList', (req, res) => {
+        const url = 'https://u.y.qq.com/cgi-bin/musics.fcg'
+
+        axios.get(url, {
+          params: req.query
+        }).then((response) => {
+          const data = response.data
+
+          // ERR_OK is 0
+          if (data.code === 0) {
+            res.json({ singerList: data.singerList.data.singerlist })
           } else {
             res.json(data)
           }

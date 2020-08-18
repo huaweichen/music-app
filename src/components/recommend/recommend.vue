@@ -40,6 +40,7 @@ import Scroll from '@/base/scroll/scroll'
 import Loading from '@/base/loading/loading'
 
 export default {
+  name: 'recommend',
   data() {
     return {
       recommends: [],
@@ -123,6 +124,6 @@ export default {
       .loading-container
         position: absolute
         width: 100%
-        top: 50%
+        top: 35%
         transform: translateY(-50%)
 </style>
