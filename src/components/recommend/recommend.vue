@@ -16,7 +16,7 @@
           <ul>
             <li v-for="(item, index) in playlist" class="item" :key="index">
               <div class="icon">
-                <img @load="loadImage" :src="item.imgurl" :alt="item.dissname" height="60" width="60">
+                <img @load="loadImage" v-lazy="item.imgurl" :alt="item.dissname" height="60" width="60">
               </div>
               <div class="text">
                 <h2 class="name">{{item.creator.name}}</h2>
@@ -26,6 +26,9 @@
           </ul>
         </div>
       </div>
+      <div class="loading-container" v-show="!this.playlist.length">
+        <loading></loading>
+      </div>
     </scroll>
   </div>
 </template>
@@ -34,6 +37,7 @@
 import { getRecommend, getPlaylist } from '@/api/recommend'
 import Slider from '@/base/slider/slider'
 import Scroll from '@/base/scroll/scroll'
+import Loading from '@/base/loading/loading'
 
 export default {
   data() {
@@ -44,7 +48,8 @@ export default {
   },
   components: {
     Slider,
-    Scroll
+    Scroll,
+    Loading
   },
   created() {
     this._getRecommend()

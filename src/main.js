@@ -6,7 +6,13 @@ import 'common/stylus/index.styl'
 
 // 300ms delay
 import fastclick from 'fastclick'
+// Lazy loader
+import VueLazyload from 'vue-lazyload'
+
 fastclick.attach(document.body)
+Vue.use(VueLazyload, {
+  loading: require('common/image/default.png')
+})
 
 Vue.config.productionTip = false
 
