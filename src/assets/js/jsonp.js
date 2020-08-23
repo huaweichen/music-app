@@ -1,6 +1,8 @@
 import originJSONP from 'jsonp'
 
 /**
+ * @deprecated
+ *
  * Customized JSONP wrapper with Promise
  * @param url
  * @param param
