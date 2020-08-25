@@ -19,6 +19,13 @@ export default {
     data: {
       type: Array,
       default: null
+    },
+    /**
+     * Whether or not listen to scroll event
+     */
+    listenScroll: {
+      type: Boolean,
+      default: false
     }
   },
   mounted() {
@@ -36,6 +43,13 @@ export default {
         probeType: this.probeType,
         click: this.click
       })
+
+      if (this.listenScroll) {
+        const that = this
+        this.scroll.on('scroll', (position) => {
+          that.$emit('scroll', position)
+        })
+      }
     },
     enableScroll() {
       this.scroll && this.scroll.enable()
