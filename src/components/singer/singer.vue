@@ -31,7 +31,6 @@ export default {
       getSingerList().then((response) => {
         const normalizedSingerList = this._normalizeSingerData(response.singerList)
         this.orderedSingerList = this._sortSingerList(normalizedSingerList)
-        console.log(this.orderedSingerList)
       })
     },
 

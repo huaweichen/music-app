@@ -86,7 +86,7 @@ export default {
         const heightTop = listHeight[i]
         const heightBottom = listHeight[i + 1]
 
-        if ((heightTop && !heightBottom) || (-newY > heightTop && -newY < heightBottom)) {
+        if ((heightTop && !heightBottom) || (-newY >= heightTop && -newY < heightBottom)) {
           this.currentIndex = i
           return
         }
@@ -117,6 +117,17 @@ export default {
       this.scrollToAnchor(anchorIndex)
     },
     scrollToAnchor(index) {
+      // Skip top and bottom extra div
+      if (!index && index !== 0) {
+        return
+      }
+
+      if (index < 0) {
+        index = 0
+      } else if (index > this.listHeight.length - 2) {
+        index = this.listHeight.length - 2
+      }
+      this.scrollY = -this.listHeight[index]
       this.$refs.listview.scrollToElement(this.$refs.listgroup[index], 0)
     },
 
