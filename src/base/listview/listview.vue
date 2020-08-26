@@ -10,7 +10,7 @@
       <li v-for="(group, index) in data" class="list-group" :key="index" ref="listgroup">
         <h2 class="list-group-title">{{group.title}}</h2>
         <ul>
-          <li v-for="(singer, index) in group.items" class="list-group-item" :key="index">
+          <li v-for="(singer, index) in group.items" class="list-group-item" :key="index" @click="selectSinger(singer)">
             <img class="avatar" v-lazy="singer.avatar" alt="singer.name">
             <span class="name">{{singer.name}}</span>
           </li>
@@ -29,18 +29,27 @@
         </li>
       </ul>
     </div>
+    <div class="list-fixed" v-show="fixedTitle !== ''" ref="fixedTitle">
+      <h1 class="fixed-title">{{fixedTitle}}</h1>
+    </div>
+    <div v-show="!data.length" class="loading-container">
+      <loading></loading>
+    </div>
   </scroll>
 </template>
 
 <script type="text/ecmascript-6">
 import Scroll from '@/base/scroll/scroll'
 import { getData } from 'common/js/dom'
+import Loading from '@/base/loading/loading'
 
 /**
  * Anchor's height
  * @type {number}
  */
 const ANCHOR_HEIGHT = 18
+
+const TITLE_HEIGHT = 30
 
 export default {
   props: {
@@ -55,17 +64,25 @@ export default {
     return {
       scrollY: -1,
       // current highlighted list item
-      currentIndex: 0
+      currentIndex: 0,
+      titleOffset: -1
     }
   },
   components: {
-    Scroll
+    Scroll,
+    Loading
   },
   computed: {
     shortcutList() {
       return this.data.map((group) => {
         return group.title.substr(0, 1)
       })
+    },
+    fixedTitle() {
+      if (this.scrollY > 0) {
+        return ''
+      }
+      return this.data[this.currentIndex] ? this.data[this.currentIndex].title : ''
     }
   },
   watch: {
@@ -88,11 +105,20 @@ export default {
 
         if ((heightTop && !heightBottom) || (-newY >= heightTop && -newY < heightBottom)) {
           this.currentIndex = i
+          this.titleOffset = heightBottom + newY
           return
         }
       }
 
       this.currentIndex = 0
+    },
+    titleOffset(offsetValue) {
+      const fixedTop = (offsetValue > 0 && offsetValue < TITLE_HEIGHT) ? offsetValue - TITLE_HEIGHT : 0
+      if (this.fixedTop === fixedTop) {
+        return
+      }
+      this.fixedTop = fixedTop
+      this.$refs.fixedTitle.style.transform = `translate3d(0, ${fixedTop}px, 0)`
     }
   },
   created() {
@@ -152,6 +178,10 @@ export default {
         height += item.clientHeight
         this.listHeight.push(height)
       }
+    },
+
+    selectSinger(singer) {
+      this.$emit('select', singer)
     }
   }
 }
