@@ -50,6 +50,7 @@ export default {
         const key = pinyin.getCamelChars(item.singer_name).charAt(0)
         const singer = new Singer({
           id: item.singer_id,
+          mid: item.singer_mid,
           name: item.singer_name,
           avatar: item.singer_pic,
           key: key
@@ -94,6 +95,7 @@ export default {
       return hotList.concat(alphabeticList)
     },
     selectSinger(singer) {
+      console.log(singer.mid)
       this.$router.push({
         path: `/singer/${singer.id}`
       })

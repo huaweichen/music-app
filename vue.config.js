@@ -101,6 +101,28 @@ module.exports = {
           console.log(e)
         })
       })
+
+      // QQ Music get singer detail
+      app.get('/api/getSingerDetail', (req, res) => {
+        const url = 'https://u.y.qq.com/cgi-bin/musics.fcg'
+        axios.get(url, {
+          params: req.query
+        }).then((response) => {
+          const data = response.data
+          console.log(data)
+          if (
+            data.code === 0 &&
+            data.singerSongList.code === 0 &&
+            data.singerSongList.data.songList.length > 0
+          ) {
+            res.json({ data: data.singerSongList.data })
+          } else {
+            res.json(data)
+          }
+        }).catch((e) => {
+          console.log(e)
+        })
+      })
     }
   }
 }

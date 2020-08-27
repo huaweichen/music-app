@@ -1,9 +1,12 @@
 <template>
-<div>test</div>
+  <transition appear name="slide">
+    <div>Test</div>
+  </transition>
 </template>
 
 <script type="text/ecmascript-6">
 import { mapGetters } from 'vuex'
+import { getSingerDetail } from '@/api/singer'
 
 export default {
   computed: {
@@ -12,7 +15,20 @@ export default {
     ])
   },
   created() {
-    console.log(this.singer)
+    this.getDetail()
+  },
+  methods: {
+    getDetail() {
+      console.log(this.singer)
+      if (!this.singer.mid) {
+        this.$router.push('/singer')
+        return
+      }
+
+      getSingerDetail().then((response) => {
+        console.log(response)
+      })
+    }
   }
 }
 </script>
