@@ -104,6 +104,7 @@ module.exports = {
 
       // QQ Music get singer detail
       app.get('/api/getSingerDetail', (req, res) => {
+        console.log(req.query)
         const url = 'https://u.y.qq.com/cgi-bin/musics.fcg'
         axios.get(url, {
           params: req.query

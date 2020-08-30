@@ -31,7 +31,7 @@ function concatenateSingerName (singer) {
 
   const ret = []
   singer.forEach((item) => {
-    ret.push(item)
+    ret.push(item.name)
   })
 
   return ret.join(' & ')

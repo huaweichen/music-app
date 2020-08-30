@@ -95,7 +95,6 @@ export default {
       return hotList.concat(alphabeticList)
     },
     selectSinger(singer) {
-      console.log(singer.mid)
       this.$router.push({
         path: `/singer/${singer.id}`
       })

@@ -4,7 +4,11 @@ export default class Singer {
     this.id = id
     this.mid = mid
     this.name = name
-    this.avatar = avatar
+    this.avatar = getHighResolution(avatar)
     this.key = key
   }
+}
+
+function getHighResolution(avatar) {
+  return avatar.replace(/150x150/i, '300x300')
 }

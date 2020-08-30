@@ -10,7 +10,7 @@ export default {
   props: {
     title: {
       type: String,
-      default: '正在玩命加载 ... '
+      default: '正在玩命加载中 ... '
     }
   }
 }

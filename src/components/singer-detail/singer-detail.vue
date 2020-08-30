@@ -1,12 +1,6 @@
 <template>
   <transition name="slide">
-    <div class="music-list">
-      <ul>
-        <li v-for="(song, key) in songs" :key="key">
-          <label>{{song.name}}</label>
-        </li>
-      </ul>
-    </div>
+    <music-list :title="title" :bg-image="bgImage" :songs="songs"></music-list>
   </transition>
 </template>
 
@@ -14,8 +8,12 @@
 import { mapGetters } from 'vuex'
 import { getSingerDetail } from '@/api/singer'
 import { songFactory } from '../../assets/js/song'
+import MusicList from '@/components/music-list/music-list'
 
 export default {
+  components: {
+    MusicList
+  },
   data () {
     return {
       songs: []
@@ -24,7 +22,13 @@ export default {
   computed: {
     ...mapGetters([
       'singer'
-    ])
+    ]),
+    title() {
+      return this.singer.name
+    },
+    bgImage() {
+      return this.singer.avatar
+    }
   },
   created() {
     this.getDetail()
@@ -36,10 +40,9 @@ export default {
         return
       }
 
-      getSingerDetail().then((response) => {
+      getSingerDetail(this.singer.mid).then((response) => {
         if (response.data.songList.length > 0) {
           this.songs = this.normalizeSong(response.data.songList)
-          console.log(this.songs)
         }
       })
     },
@@ -66,13 +69,4 @@ export default {
 
   .slide-enter, .slide-leave-to
     transform: translate3d(100%, 0, 0)
-
-  .music-list
-    position: fixed
-    z-index: 100
-    top: 0
-    left: 0
-    bottom: 0
-    right: 0
-    background: $color-background
 </style>
