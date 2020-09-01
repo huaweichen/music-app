@@ -38,8 +38,8 @@ export function getSingerDetail(singerMid) {
   // sign and singerMid are bind together, not possible to list dynamically.
   const params = Object.assign({}, commonParams, {
     '-': 'getSingerSong' + (Math.random() + '').replace('0.', ''),
-    sign: 'zzahmcys5t8fp6y7259b46505c87204be2a320c5b177452',
-    data: { comm: { ct: 24, cv: 0 }, singerSongList: { method: 'GetSingerSongList', param: { order: 1, singerMid: '001BLpXF2DyJe2', begin: 0, num: 10 }, module: 'musichall.song_list_server' } }
+    sign: 'zzaf2cqha79fq8phmk496b89053fc446ea8aa1da318b0d05ad0',
+    data: { comm: { ct: 24, cv: 0 }, singerSongList: { method: 'GetSingerSongList', param: { order: 1, singerMid: '002J4UUk29y8BY', begin: 0, num: 10 }, module: 'musichall.song_list_server' } }
   })
 
   return axios.get(url, {

@@ -22,7 +22,7 @@
       class="list"
       ref="list">
       <div class="song-list-wrapper">
-        <song-list :songs="songs"></song-list>
+        <song-list :songs="songs" @selectSong="selectSong"></song-list>
       </div>
       <div class="loading-container" v-show="!songs.length">
         <loading></loading>
@@ -36,6 +36,7 @@ import Scroll from '@/base/scroll/scroll'
 import SongList from '@/base/song-list/song-list'
 import Loading from '@/base/loading/loading'
 import { prefixStyle } from 'common/js/dom'
+import { mapActions } from 'vuex'
 
 const TITLE_HEIGHT = 40
 
@@ -69,6 +70,15 @@ export default {
     Loading
   },
   methods: {
+    selectSong(song, index) {
+      this.playSongAction({
+        songList: this.songs,
+        index
+      })
+    },
+    ...mapActions([
+      'playSongAction'
+    ]),
     back() {
       this.$router.back()
     },

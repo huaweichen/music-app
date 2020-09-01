@@ -19,7 +19,7 @@ export function songFactory(songInfo) {
     name: songInfo.subtitle ? songInfo.title + ' - ' + songInfo.subtitle : songInfo.title,
     album: songInfo.album.title,
     duration: songInfo.interval,
-    image: `https://y.gtimg.cn/music/photo_new/T002R300x300M00${songInfo.album.mid}_1.jpg?max_age=2592000`,
+    image: `https://y.gtimg.cn/music/photo_new/T002R300x300M000${songInfo.album.mid}.jpg?max_age=2592000`,
     url: `http://ws.stream.qqmusic.qq.com/${songInfo.id}.m4a?fromtag=46`
   })
 }
