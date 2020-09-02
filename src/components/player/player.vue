@@ -1,20 +1,26 @@
 <template>
   <div class="player" v-show="playList.length > 0">
-    <div class="normal-player" v-show="fullScreen">
+    <transition name="normal"
+                @enter="enter"
+                @after-enter="afterEnter"
+                @leave="leave"
+                @after-leave="afterLeave"
+    >
+      <div class="normal-player" v-show="fullScreen">
       <div class="background">
         <img width="100%" height="100%" :src="currentSong.image"/>
       </div>
       <div class="top">
-        <div class="back">
+        <div class="back" @click="back">
           <i class="icon-back"></i>
         </div>
-        <h1 class="title"></h1>
-        <h2 class="subtitle"></h2>
+        <h1 class="title" v-html="currentSong.name"></h1>
+        <h2 class="subtitle" v-html="currentSong.singer"></h2>
       </div>
       <div class="middle">
         <div class="middle-l">
-          <div class="cd-wrapper">
-            <div class="cd">
+          <div class="cd-wrapper" ref="cdWrapper">
+            <div class="cd" :class="cdRotate">
               <img class="image" :src="currentSong.image"/>
             </div>
           </div>
@@ -29,7 +35,7 @@
             <i class="icon-prev"></i>
           </div>
           <div class="icon i-center">
-            <i class="icon-play"></i>
+            <i :class="normalPlayerIcon" @click="togglePlaying"></i>
           </div>
           <div class="icon i-right">
             <i class="icon-next"></i>
@@ -40,32 +46,137 @@
         </div>
       </div>
     </div>
-    <div class="mini-player" v-show="!fullScreen">
-      <div class="icon">
-        <img width="40" height="40" :src="currentSong.image"/>
+    </transition>
+    <transition name="mini">
+      <div class="mini-player" v-show="!fullScreen" @click="open">
+        <div class="icon">
+          <img width="40" height="40" :src="currentSong.image" :class="cdRotate"/>
+        </div>
+        <div class="text">
+          <h2 class="name" v-html="currentSong.name"></h2>
+          <p class="desc" v-html="currentSong.singer"></p>
+        </div>
+        <div class="control" @click.stop="togglePlaying">
+          <i :class="miniPlayerIcon"></i>
+        </div>
+        <div class="control">
+          <i class="icon-playlist"></i>
+        </div>
       </div>
-      <div class="text">
-        <h2 class="name"></h2>
-        <p class="desc"></p>
-      </div>
-      <div class="control"></div>
-      <div class="control">
-        <i class="icon-playlist"></i>
-      </div>
-    </div>
+    </transition>
+    <audio src="https://music.audiomack.com/tracks/valee/valee-rice.mp3?Expires=1599137970&Signature=Znz-dm39MJUApI4C6BkjjGlJ61UIqnXzocSA7Kyx7CHrHaG88yRwh8ZDOjUMCOIPguHoFx-pHSGNIROADYuUjf9ZhHDGFTFDjytfCc2zMB~s6-dTZc8HGYl5mGMAreZSDlxY-MOib34b~BXx8TJld2sCJ8GyAj-WXQH~If0tO4Y_&Key-Pair-Id=APKAIKAIRXBA2H7FXITA" ref="audio"></audio>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
-import { mapGetters } from 'vuex'
+import { mapGetters, mapMutations } from 'vuex'
+import animations from 'create-keyframe-animation'
+import { prefixStyle } from 'common/js/dom'
+
+const PREFIXED_TRANSFORM = prefixStyle('transform')
 
 export default {
   computed: {
     ...mapGetters([
       'fullScreen',
       'playList',
-      'currentSong'
-    ])
+      'currentSong',
+      'playing'
+    ]),
+    normalPlayerIcon() {
+      return this.playing ? 'icon-pause' : 'icon-play'
+    },
+    miniPlayerIcon() {
+      return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
+    },
+    cdRotate() {
+      return this.playing ? 'play' : 'play pause'
+    }
+  },
+  methods: {
+    back() {
+      console.log('back')
+      this.setFullScreen(false)
+    },
+    open() {
+      console.log('open')
+      this.setFullScreen(true)
+    },
+    enter(element, done) {
+      const { x, y, scale } = this.getPositionAndScale()
+
+      const animation = {
+        0: {
+          transform: `translate3d(${x}px,${y}px,0) scale(${scale})`
+        },
+        60: {
+          transform: 'translate3d(0,0,0) scale(1.1)'
+        },
+        100: {
+          transform: 'translate3d(0,0,0) scale(1)'
+        }
+      }
+
+      animations.registerAnimation({
+        name: 'move',
+        animation,
+        presets: {
+          duration: 500,
+          easing: 'linear'
+        }
+      })
+      console.log('enter')
+
+      animations.runAnimation(this.$refs.cdWrapper, 'move', done)
+    },
+    afterEnter() {},
+    leave(element, done) {
+      const { x, y, scale } = this.getPositionAndScale()
+      console.log('leave')
+      this.$refs.cdWrapper.style.transition = 'all 0.5s'
+      this.$refs.cdWrapper.style[PREFIXED_TRANSFORM] = `translate3d(${x}px,${y}px,0) scale(${scale})`
+    },
+    afterLeave() {
+      console.log('afterLeave')
+      this.$refs.cdWrapper.style.transition = ''
+      this.$refs.cdWrapper.style[PREFIXED_TRANSFORM] = ''
+    },
+    ...mapMutations({
+      setFullScreen: 'SET_FULL_SCREEN',
+      setPlayingState: 'SET_PLAYING_STATE'
+    }),
+    togglePlaying() {
+      this.setPlayingState(!this.playing)
+    },
+
+    // Get mini-player's position and scale compare to player's CD middle point.
+    getPositionAndScale() {
+      const targetWidth = 40
+      const paddingLeft = 40
+      const paddingBottom = 30
+      const paddingTop = 80
+      const width = window.innerWidth * 0.8
+      const scale = targetWidth / width
+      const x = -(window.innerWidth / 2 - paddingLeft)
+      const y = window.innerHeight - paddingTop - width / 2 - paddingBottom
+
+      return {
+        x, y, scale
+      }
+    }
+  },
+  watch: {
+    currentSong() {
+      this.$nextTick(() => {
+        this.$refs.audio.play()
+      })
+    },
+    playing(newState) {
+      const audioElm = this.$refs.audio
+      this.$nextTick(() => {
+        newState ? audioElm.play() : audioElm.pause()
+      })
+    }
   }
 }
 </script>
