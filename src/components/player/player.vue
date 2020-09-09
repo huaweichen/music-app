@@ -27,18 +27,25 @@
         </div>
       </div>
       <div class="bottom">
+        <div class="progress-wrapper">
+          <span class="time time-l">{{formatTime(currentTime)}}</span>
+          <div class="progress-bar-wrapper">
+            <progress-bar :percent="percent" @percentChange="changeAudioCurrentTime"></progress-bar>
+          </div>
+          <span class="time time-r">{{formatTime(currentSong.duration)}}</span>
+        </div>
         <div class="operators">
           <div class="icon i-left">
             <i class="icon-sequence"></i>
           </div>
-          <div class="icon i-left">
-            <i class="icon-prev"></i>
+          <div class="icon i-left" :class="disableClass">
+            <i class="icon-prev" @click="prev"></i>
           </div>
-          <div class="icon i-center">
+          <div class="icon i-center" :class="disableClass">
             <i :class="normalPlayerIcon" @click="togglePlaying"></i>
           </div>
-          <div class="icon i-right">
-            <i class="icon-next"></i>
+          <div class="icon i-right" :class="disableClass">
+            <i class="icon-next" @click="next"></i>
           </div>
           <div class="icon i-right">
             <i class="icon-not-favorite"></i>
@@ -64,7 +71,8 @@
         </div>
       </div>
     </transition>
-    <audio src="https://music.audiomack.com/tracks/valee/valee-rice.mp3?Expires=1599137970&Signature=Znz-dm39MJUApI4C6BkjjGlJ61UIqnXzocSA7Kyx7CHrHaG88yRwh8ZDOjUMCOIPguHoFx-pHSGNIROADYuUjf9ZhHDGFTFDjytfCc2zMB~s6-dTZc8HGYl5mGMAreZSDlxY-MOib34b~BXx8TJld2sCJ8GyAj-WXQH~If0tO4Y_&Key-Pair-Id=APKAIKAIRXBA2H7FXITA" ref="audio"></audio>
+    <audio src="https://music.audiomack.com/streaming/darren-256/yan-yuan-lyric-pinyin-engsub.mp3?Expires=1599742623&Signature=BybUKB-hwslzSbsL8z3CAoHlTQHUJulnTEK49JCxvFpa3HTjVEtbSTf0UWAADMK4cbudVWW0EZEfnp9sVdvEshKY3Yq3eq1svbXz3edtYxDBzRWiGY2ozSXe~VuN3v7UIsFeIJNurc3zluFsuG8viNfSw0F-297mOspD~XFXaL8_&Key-Pair-Id=APKAIKAIRXBA2H7FXITA" ref="audio" @canplay="canplay" @error="error" @timeupdate="updateTime"></audio>
+<!--    <audio src="https://listen.hs.llnwd.net/g3/1/7/4/7/6/1174767471.mp3" ref="audio" @canplay="canplay" @error="error" @timeupdate="updateTime"></audio>-->
   </div>
 </template>
 
@@ -72,16 +80,30 @@
 import { mapGetters, mapMutations } from 'vuex'
 import animations from 'create-keyframe-animation'
 import { prefixStyle } from 'common/js/dom'
+import ProgressBar from '@/base/progress-bar/progress-bar'
 
 const PREFIXED_TRANSFORM = prefixStyle('transform')
 
 export default {
+  data() {
+    return {
+      songReady: false,
+      currentTime: 0
+    }
+  },
+  components: {
+    ProgressBar
+  },
   computed: {
+    percent() {
+      return this.currentTime / this.currentSong.duration
+    },
     ...mapGetters([
       'fullScreen',
       'playList',
       'currentSong',
-      'playing'
+      'playing',
+      'currentIndex'
     ]),
     normalPlayerIcon() {
       return this.playing ? 'icon-pause' : 'icon-play'
@@ -91,15 +113,40 @@ export default {
     },
     cdRotate() {
       return this.playing ? 'play' : 'play pause'
+    },
+    disableClass() {
+      return this.songReady ? '' : 'disable'
     }
   },
   methods: {
+    changeAudioCurrentTime(percent) {
+      this.$refs.audio.currentTime = percent * this.currentSong.duration
+
+      if (!this.playing) {
+        this.togglePlaying()
+      }
+    },
+    updateTime(event) {
+      this.currentTime = event.target.currentTime
+    },
+    formatTime(timestamp) {
+      timestamp = timestamp | 0
+      const minute = timestamp / 60 | 0
+      const second = timestamp % 60
+
+      return `${this.pad(minute)}:${this.pad(second)}`
+    },
+    pad(number) {
+      const length = number.toString().length
+      if (length < 2) {
+        return `0${number}`
+      }
+      return number
+    },
     back() {
-      console.log('back')
       this.setFullScreen(false)
     },
     open() {
-      console.log('open')
       this.setFullScreen(true)
     },
     enter(element, done) {
@@ -125,28 +172,64 @@ export default {
           easing: 'linear'
         }
       })
-      console.log('enter')
 
       animations.runAnimation(this.$refs.cdWrapper, 'move', done)
     },
     afterEnter() {},
     leave(element, done) {
       const { x, y, scale } = this.getPositionAndScale()
-      console.log('leave')
       this.$refs.cdWrapper.style.transition = 'all 0.5s'
       this.$refs.cdWrapper.style[PREFIXED_TRANSFORM] = `translate3d(${x}px,${y}px,0) scale(${scale})`
     },
     afterLeave() {
-      console.log('afterLeave')
       this.$refs.cdWrapper.style.transition = ''
       this.$refs.cdWrapper.style[PREFIXED_TRANSFORM] = ''
     },
     ...mapMutations({
       setFullScreen: 'SET_FULL_SCREEN',
-      setPlayingState: 'SET_PLAYING_STATE'
+      setPlayingState: 'SET_PLAYING_STATE',
+      setCurrentIndex: 'SET_CURRENT_INDEX'
     }),
     togglePlaying() {
       this.setPlayingState(!this.playing)
+    },
+    prev() {
+      if (!this.songReady) {
+        return
+      }
+
+      let nextIndex = this.currentIndex - 1
+      if (nextIndex === -1) {
+        nextIndex = this.playList.length - 1
+      }
+      this.setCurrentIndex(nextIndex)
+      if (!this.playing) {
+        this.togglePlaying()
+      }
+
+      this.songReady = false
+    },
+    next() {
+      if (!this.songReady) {
+        return
+      }
+
+      let nextIndex = this.currentIndex + 1
+      if (nextIndex === this.playList.length) {
+        nextIndex = 0
+      }
+      this.setCurrentIndex(nextIndex)
+      if (!this.playing) {
+        this.togglePlaying()
+      }
+
+      this.songReady = false
+    },
+    canplay() {
+      this.songReady = true
+    },
+    error() {
+      this.songReady = true
     },
 
     // Get mini-player's position and scale compare to player's CD middle point.

@@ -11,7 +11,7 @@ module.exports = {
     before(app) {
       // QQ Music get recommend tracks
       app.get('/api/getQQRecommendTracks', (req, res) => {
-        const url = 'https://u.y.qq.com/cgi-bin/musicu.fcg'
+        const url = 'https://music.myself.com/api/getSingers?_token=xx'
         // Jump to different URL based on "jumptype"
         const jumpTypeUrlMapper = {
           10002: 'https://y.qq.com/n/yqq/album/',
