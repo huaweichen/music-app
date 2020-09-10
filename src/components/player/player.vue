@@ -36,7 +36,7 @@
         </div>
         <div class="operators">
           <div class="icon i-left">
-            <i class="icon-sequence"></i>
+            <i :class="iconPlayMode" @click="changePlayMode"></i>
           </div>
           <div class="icon i-left" :class="disableClass">
             <i class="icon-prev" @click="prev"></i>
@@ -64,15 +64,16 @@
           <p class="desc" v-html="currentSong.singer"></p>
         </div>
         <div class="control" @click.stop="togglePlaying">
-          <i :class="miniPlayerIcon"></i>
+          <progress-circle :radius="32" :percent="percent">
+            <i :class="miniPlayerIcon" class="icon-mini"></i>
+          </progress-circle>
         </div>
         <div class="control">
           <i class="icon-playlist"></i>
         </div>
       </div>
     </transition>
-    <audio src="https://music.audiomack.com/streaming/darren-256/yan-yuan-lyric-pinyin-engsub.mp3?Expires=1599742623&Signature=BybUKB-hwslzSbsL8z3CAoHlTQHUJulnTEK49JCxvFpa3HTjVEtbSTf0UWAADMK4cbudVWW0EZEfnp9sVdvEshKY3Yq3eq1svbXz3edtYxDBzRWiGY2ozSXe~VuN3v7UIsFeIJNurc3zluFsuG8viNfSw0F-297mOspD~XFXaL8_&Key-Pair-Id=APKAIKAIRXBA2H7FXITA" ref="audio" @canplay="canplay" @error="error" @timeupdate="updateTime"></audio>
-<!--    <audio src="https://listen.hs.llnwd.net/g3/1/7/4/7/6/1174767471.mp3" ref="audio" @canplay="canplay" @error="error" @timeupdate="updateTime"></audio>-->
+    <audio src="https://music.audiomack.com/streaming/darren-256/yan-yuan-lyric-pinyin-engsub.mp3?Expires=1599742623&Signature=BybUKB-hwslzSbsL8z3CAoHlTQHUJulnTEK49JCxvFpa3HTjVEtbSTf0UWAADMK4cbudVWW0EZEfnp9sVdvEshKY3Yq3eq1svbXz3edtYxDBzRWiGY2ozSXe~VuN3v7UIsFeIJNurc3zluFsuG8viNfSw0F-297mOspD~XFXaL8_&Key-Pair-Id=APKAIKAIRXBA2H7FXITA" ref="audio" @canplay="canplay" @error="error" @timeupdate="updateTime" @ended="end"></audio>
   </div>
 </template>
 
@@ -81,6 +82,9 @@ import { mapGetters, mapMutations } from 'vuex'
 import animations from 'create-keyframe-animation'
 import { prefixStyle } from 'common/js/dom'
 import ProgressBar from '@/base/progress-bar/progress-bar'
+import ProgressCircle from '@/base/progress-circle/progress-circle'
+import { playMode } from 'common/js/config'
+import { shuffle } from 'common/js/util'
 
 const PREFIXED_TRANSFORM = prefixStyle('transform')
 
@@ -88,11 +92,13 @@ export default {
   data() {
     return {
       songReady: false,
-      currentTime: 0
+      currentTime: 0,
+      radius: 32
     }
   },
   components: {
-    ProgressBar
+    ProgressBar,
+    ProgressCircle
   },
   computed: {
     percent() {
@@ -103,8 +109,13 @@ export default {
       'playList',
       'currentSong',
       'playing',
-      'currentIndex'
+      'currentIndex',
+      'mode',
+      'sequenceList'
     ]),
+    iconPlayMode() {
+      return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
+    },
     normalPlayerIcon() {
       return this.playing ? 'icon-pause' : 'icon-play'
     },
@@ -119,6 +130,35 @@ export default {
     }
   },
   methods: {
+    end() {
+      if (this.mode === playMode.loop) {
+        this.loop()
+      } else {
+        this.next()
+      }
+    },
+    loop() {
+      this.$refs.audio.currentTime = 0
+      this.$refs.audio.play()
+    },
+    changePlayMode () {
+      const mode = (this.mode + 1) % 3
+      this.setPlayMode(mode)
+
+      let list = null
+      if (mode === playMode.random) {
+        list = shuffle(this.sequenceList)
+      } else {
+        list = this.sequenceList
+      }
+
+      const currentSongIndex = list.findIndex((item) => {
+        return item.id === this.currentSong.id
+      })
+      this.setCurrentIndex(currentSongIndex) // Need to keep current song's index
+
+      this.setPlaySequence(list)
+    },
     changeAudioCurrentTime(percent) {
       this.$refs.audio.currentTime = percent * this.currentSong.duration
 
@@ -175,11 +215,15 @@ export default {
 
       animations.runAnimation(this.$refs.cdWrapper, 'move', done)
     },
-    afterEnter() {},
+    afterEnter() {
+      animations.unregisterAnimation('move')
+      this.$refs.cdWrapper.style.animation = ''
+    },
     leave(element, done) {
       const { x, y, scale } = this.getPositionAndScale()
       this.$refs.cdWrapper.style.transition = 'all 0.5s'
       this.$refs.cdWrapper.style[PREFIXED_TRANSFORM] = `translate3d(${x}px,${y}px,0) scale(${scale})`
+      this.$refs.cdWrapper.addEventListener('transitionend', done)
     },
     afterLeave() {
       this.$refs.cdWrapper.style.transition = ''
@@ -188,7 +232,9 @@ export default {
     ...mapMutations({
       setFullScreen: 'SET_FULL_SCREEN',
       setPlayingState: 'SET_PLAYING_STATE',
-      setCurrentIndex: 'SET_CURRENT_INDEX'
+      setCurrentIndex: 'SET_CURRENT_INDEX',
+      setPlayMode: 'SET_PLAY_MODE',
+      setPlaySequence: 'SET_SEQUENCE_LIST'
     }),
     togglePlaying() {
       this.setPlayingState(!this.playing)
@@ -249,7 +295,11 @@ export default {
     }
   },
   watch: {
-    currentSong() {
+    currentSong(newSong, oldSong) {
+      // make sure do not play music when change play mode
+      if (newSong.id === oldSong.id) {
+        return
+      }
       this.$nextTick(() => {
         this.$refs.audio.play()
       })

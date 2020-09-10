@@ -34,7 +34,9 @@ export default {
   },
   methods: {
     progressBarClickHandler(event) {
-      this.calculateOffsetX(event.offsetX)
+      const rect = this.$refs.progressBar.getBoundingClientRect()
+      const offsetWidth = event.pageX - rect.left
+      this.calculateOffsetX(offsetWidth)
       this.changePercent()
     },
     progressTouchStart(event) {
@@ -60,7 +62,8 @@ export default {
       this.$refs.progressBtn.style[TRANSFORM] = `translate3d(${widthX}px, 0, 0)`
     },
     changePercent() {
-      const newAudioPercent = this.$refs.progress.clientWidth / this.progressBarWidth
+      const barWidth = this.$refs.progressBar.clientWidth - PROGRESS_BTN_WIDTH
+      const newAudioPercent = this.$refs.progress.clientWidth / barWidth
       this.$emit('percentChange', newAudioPercent)
     }
   },
