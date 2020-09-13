@@ -25,6 +25,15 @@
             </div>
           </div>
         </div>
+        <div class="middle-r" ref="lyricList">
+          <div class="lyric-wrapper">
+            <div v-if="currentLyrics">
+              <p ref="lyricLine" class="text" v-for="(line, index) in currentLyrics.lines" :key="index">
+                {{ line.txt }}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="bottom">
         <div class="progress-wrapper">
@@ -73,7 +82,7 @@
         </div>
       </div>
     </transition>
-    <audio src="https://music.audiomack.com/streaming/darren-256/yan-yuan-lyric-pinyin-engsub.mp3?Expires=1599742623&Signature=BybUKB-hwslzSbsL8z3CAoHlTQHUJulnTEK49JCxvFpa3HTjVEtbSTf0UWAADMK4cbudVWW0EZEfnp9sVdvEshKY3Yq3eq1svbXz3edtYxDBzRWiGY2ozSXe~VuN3v7UIsFeIJNurc3zluFsuG8viNfSw0F-297mOspD~XFXaL8_&Key-Pair-Id=APKAIKAIRXBA2H7FXITA" ref="audio" @canplay="canplay" @error="error" @timeupdate="updateTime" @ended="end"></audio>
+    <audio src="/songs/yan-yuan-lyric-pinyin-engsub.mp3" ref="audio" @canplay="canplay" @error="error" @timeupdate="updateTime" @ended="end"></audio>
   </div>
 </template>
 
@@ -85,6 +94,7 @@ import ProgressBar from '@/base/progress-bar/progress-bar'
 import ProgressCircle from '@/base/progress-circle/progress-circle'
 import { playMode } from 'common/js/config'
 import { shuffle } from 'common/js/util'
+import { Lyric } from 'lyric-parser'
 
 const PREFIXED_TRANSFORM = prefixStyle('transform')
 
@@ -93,7 +103,8 @@ export default {
     return {
       songReady: false,
       currentTime: 0,
-      radius: 32
+      radius: 32,
+      currentLyrics: null
     }
   },
   components: {
@@ -130,6 +141,13 @@ export default {
     }
   },
   methods: {
+    getLyrics() {
+      this.currentSong.getLyrics().then((lyric) => {
+        console.log(Lyric)
+        this.currentLyrics = new Lyric(lyric)
+        console.log(this.currentLyrics)
+      })
+    },
     end() {
       if (this.mode === playMode.loop) {
         this.loop()
@@ -302,6 +320,7 @@ export default {
       }
       this.$nextTick(() => {
         this.$refs.audio.play()
+        this.getLyrics()
       })
     },
     playing(newState) {

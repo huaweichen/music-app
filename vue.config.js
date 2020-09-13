@@ -9,6 +9,23 @@ module.exports = {
 
   devServer: {
     before(app) {
+      // QQ Music get lyrics
+      app.get('/api/lyrics', (req, res) => {
+        const url = 'https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg'
+        axios.get(url, {
+          headers: {
+            referer: 'https://c.y.qq.com',
+            host: 'c.y.qq.com'
+          },
+          params: req.query
+        }).then((response) => {
+          console.log(response.data)
+          res.json(response.data)
+        }).catch((e) => {
+          console.log(e)
+        })
+      })
+
       // QQ Music get recommend tracks
       app.get('/api/getQQRecommendTracks', (req, res) => {
         const url = 'https://music.myself.com/api/getSingers?_token=xx'
