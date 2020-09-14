@@ -17,25 +17,33 @@
         <h1 class="title" v-html="currentSong.name"></h1>
         <h2 class="subtitle" v-html="currentSong.singer"></h2>
       </div>
-      <div class="middle">
-        <div class="middle-l">
+      <div class="middle"
+           @touchstart.prevent="middleTouchStart"
+           @touchmove.prevent="middleTouchMove"
+           @touchend="middleTouchEnd"
+      >
+        <div class="middle-l" ref="middleL">
           <div class="cd-wrapper" ref="cdWrapper">
             <div class="cd" :class="cdRotate">
               <img class="image" :src="currentSong.image"/>
             </div>
           </div>
         </div>
-        <div class="middle-r" ref="lyricList">
+        <scroll class="middle-r" ref="lyricList" :data="currentLyrics && currentLyrics.lines">
           <div class="lyric-wrapper">
             <div v-if="currentLyrics">
-              <p ref="lyricLine" class="text" v-for="(line, index) in currentLyrics.lines" :key="index">
+              <p ref="lyricLine" class="text" :class="{'current': currentLineNumber === index}" v-for="(line, index) in currentLyrics.lines" :key="index">
                 {{ line.txt }}
               </p>
             </div>
           </div>
-        </div>
+        </scroll>
       </div>
       <div class="bottom">
+        <div class="dot-wrapper">
+          <span class="dot" :class="{'active': currentShow === 'cd'}"></span>
+          <span class="dot" :class="{'active': currentShow === 'lyrics'}"></span>
+        </div>
         <div class="progress-wrapper">
           <span class="time time-l">{{formatTime(currentTime)}}</span>
           <div class="progress-bar-wrapper">
@@ -94,7 +102,8 @@ import ProgressBar from '@/base/progress-bar/progress-bar'
 import ProgressCircle from '@/base/progress-circle/progress-circle'
 import { playMode } from 'common/js/config'
 import { shuffle } from 'common/js/util'
-import { Lyric } from 'lyric-parser'
+import LyricParser from 'lyric-parser'
+import Scroll from '@/base/scroll/scroll'
 
 const PREFIXED_TRANSFORM = prefixStyle('transform')
 
@@ -104,12 +113,15 @@ export default {
       songReady: false,
       currentTime: 0,
       radius: 32,
-      currentLyrics: null
+      currentLyrics: null,
+      currentLineNumber: 0,
+      currentShow: 'cd' // cd or lyrics
     }
   },
   components: {
     ProgressBar,
-    ProgressCircle
+    ProgressCircle,
+    Scroll
   },
   computed: {
     percent() {
@@ -140,12 +152,86 @@ export default {
       return this.songReady ? '' : 'disable'
     }
   },
+  created() {
+    this.touch = {}
+  },
   methods: {
+    middleTouchStart(e) {
+      this.touch.initialized = true
+      const oneTouch = e.touches[0]
+      this.touch.startX = oneTouch.pageX
+      this.touch.startY = oneTouch.pageY
+    },
+    middleTouchMove(e) {
+      if (!this.touch.initialized) {
+        return
+      }
+
+      const oneTouch = e.touches[0]
+      const deltaX = oneTouch.pageX - this.touch.startX
+      const deltaY = oneTouch.pageY - this.touch.startY
+
+      // check it's a scroll or swipe
+      if (Math.abs(deltaY) > Math.abs(deltaX)) {
+        return
+      }
+
+      const leftX = this.currentShow === 'cd' ? 0 : -window.innerWidth
+      const offsetWidth = Math.min(0, Math.max(-window.innerWidth, leftX + deltaX))
+
+      this.touch.percent = Math.abs(offsetWidth / window.innerWidth)
+      this.$refs.lyricList.$el.style[PREFIXED_TRANSFORM] = `translate3d(${offsetWidth}px, 0, 0)`
+      this.$refs.lyricList.$el.style.transitionDuration = '0ms'
+      this.$refs.middleL.style.opacity = 1 - this.touch.percent
+      this.$refs.middleL.style.transitionDuration = '0ms'
+    },
+    middleTouchEnd(e) {
+      let offsetWidth
+      let middleLOpacity
+
+      // swipe right -> left
+      if (this.currentShow === 'cd') {
+        if (this.touch.percent > 0.2) {
+          offsetWidth = -window.innerWidth
+          this.currentShow = 'lyrics'
+          middleLOpacity = 0
+        } else {
+          offsetWidth = 0
+          middleLOpacity = 1
+        }
+      } else {
+        // swipe left -> right
+        if (this.touch.percent < 0.8) {
+          offsetWidth = 0
+          this.currentShow = 'cd'
+          middleLOpacity = 1
+        } else {
+          offsetWidth = -window.innerWidth
+          middleLOpacity = 0
+        }
+      }
+
+      this.$refs.lyricList.$el.style[PREFIXED_TRANSFORM] = `translate3d(${offsetWidth}px, 0, 0)`
+      this.$refs.lyricList.$el.style.transitionDuration = '300ms'
+      this.$refs.middleL.style.opacity = middleLOpacity
+      this.$refs.middleL.style.transitionDuration = '300ms'
+    },
+    handleLyrics(lineObject, text) {
+      this.currentLineNumber = lineObject.lineNum
+      if (lineObject.lineNum > 5) {
+        const currentLine = this.$refs.lyricLine[lineObject.lineNum - 5]
+        this.$refs.lyricList.scrollToElement(currentLine, 1000)
+      } else {
+        this.$refs.lyricList.scrollTo(0, 0, 1000)
+      }
+    },
     getLyrics() {
       this.currentSong.getLyrics().then((lyric) => {
-        console.log(Lyric)
-        this.currentLyrics = new Lyric(lyric)
-        console.log(this.currentLyrics)
+        this.currentLyrics = new LyricParser(lyric, this.handleLyrics)
+        console.log(this.currentLyrics.lines)
+        if (this.playing) {
+          this.currentLyrics.play()
+        }
       })
     },
     end() {
