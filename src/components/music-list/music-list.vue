@@ -37,12 +37,16 @@ import SongList from '@/base/song-list/song-list'
 import Loading from '@/base/loading/loading'
 import { prefixStyle } from 'common/js/dom'
 import { mapActions } from 'vuex'
+import { playlistMixin } from '@/assets/js/mixin'
 
 const TITLE_HEIGHT = 40
 
 const PREFIXED_TRANSFORM = prefixStyle('transform')
 
 export default {
+  mixins: [
+    playlistMixin
+  ],
   props: {
     bgImage: {
       type: String,
@@ -70,6 +74,10 @@ export default {
     Loading
   },
   methods: {
+    handlePlayList(playlist) {
+      this.$refs.list.$el.style.bottom = playlist.length > 0 ? '60px' : ''
+      this.$refs.list.refreshScroll()
+    },
     playRandom() {
       this.randomPlay({ songList: this.songs })
     },

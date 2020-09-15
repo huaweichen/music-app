@@ -19,6 +19,7 @@ module.exports = {
           },
           params: req.query
         }).then((response) => {
+          console.log(response.data)
           res.json(response.data)
         }).catch((e) => {
           console.log(e)
@@ -43,6 +44,7 @@ module.exports = {
           params: req.query
         }).then((response) => {
           response = response.data
+          console.log(response)
 
           // Err OK === 0
           if (response.code === 0) {
@@ -87,6 +89,7 @@ module.exports = {
           params: req.query
         }).then((response) => {
           const data = response.data
+          console.log(data)
 
           if (data.code === 0 && data.data.list.length > 0) {
             res.json({ list: data.data.list })
@@ -107,6 +110,7 @@ module.exports = {
         }).then((response) => {
           const data = response.data
 
+          console.log(data)
           // ERR_OK is 0
           if (data.code === 0) {
             res.json({ singerList: data.singerList.data.singerlist })
@@ -120,7 +124,6 @@ module.exports = {
 
       // QQ Music get singer detail
       app.get('/api/getSingerDetail', (req, res) => {
-        console.log(req.query)
         const url = 'https://u.y.qq.com/cgi-bin/musics.fcg'
         axios.get(url, {
           params: req.query

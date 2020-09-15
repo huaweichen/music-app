@@ -128,6 +128,9 @@ export default {
     this.probeType = 3
   },
   methods: {
+    refreshListView() {
+      this.$refs.listview.refreshScroll()
+    },
     onShortcutTouchStart(element) {
       const anchorIndex = getData(element.target, 'index')
       const firstTouch = element.touches[0]

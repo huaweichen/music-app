@@ -28,6 +28,9 @@
               <img class="image" :src="currentSong.image"/>
             </div>
           </div>
+          <div class="playing-lyric-wrapper">
+            <div class="playing-lyric">{{ playingLyric }}</div>
+          </div>
         </div>
         <scroll class="middle-r" ref="lyricList" :data="currentLyrics && currentLyrics.lines">
           <div class="lyric-wrapper">
@@ -115,7 +118,8 @@ export default {
       radius: 32,
       currentLyrics: null,
       currentLineNumber: 0,
-      currentShow: 'cd' // cd or lyrics
+      currentShow: 'cd', // cd or lyrics
+      playingLyric: ''
     }
   },
   components: {
@@ -216,7 +220,7 @@ export default {
       this.$refs.middleL.style.opacity = middleLOpacity
       this.$refs.middleL.style.transitionDuration = '300ms'
     },
-    handleLyrics(lineObject, text) {
+    handleLyrics(lineObject) {
       this.currentLineNumber = lineObject.lineNum
       if (lineObject.lineNum > 5) {
         const currentLine = this.$refs.lyricLine[lineObject.lineNum - 5]
@@ -224,14 +228,20 @@ export default {
       } else {
         this.$refs.lyricList.scrollTo(0, 0, 1000)
       }
+      this.playingLyric = lineObject.txt
     },
     getLyrics() {
-      this.currentSong.getLyrics().then((lyric) => {
-        this.currentLyrics = new LyricParser(lyric, this.handleLyrics)
-        if (this.playing) {
-          this.currentLyrics.play()
-        }
-      })
+      this.currentSong.getLyrics()
+        .then((lyric) => {
+          this.currentLyrics = new LyricParser(lyric, this.handleLyrics)
+          if (this.playing) {
+            this.currentLyrics.play()
+          }
+        }).catch(() => {
+          this.currentLyrics = null
+          this.playingLyric = ''
+          this.currentLineNumber = 0
+        })
     },
     end() {
       if (this.mode === playMode.loop) {
@@ -360,6 +370,11 @@ export default {
         return
       }
 
+      if (this.playList.length === 1) {
+        this.loop()
+        return
+      }
+
       let nextIndex = this.currentIndex - 1
       if (nextIndex === -1) {
         nextIndex = this.playList.length - 1
@@ -373,6 +388,11 @@ export default {
     },
     next() {
       if (!this.songReady) {
+        return
+      }
+
+      if (this.playList.length === 1) {
+        this.loop()
         return
       }
 
