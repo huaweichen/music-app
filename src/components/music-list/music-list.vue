@@ -74,7 +74,6 @@ export default {
       this.randomPlay({ songList: this.songs })
     },
     selectSong(song, index) {
-      console.log(this.songs)
       this.playSongAction({
         songList: this.songs,
         index

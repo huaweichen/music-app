@@ -90,7 +90,7 @@
         </div>
       </div>
     </transition>
-    <audio src="/songs/yan-yuan-lyric-pinyin-engsub.mp3" ref="audio" @canplay="canplay" @error="error" @timeupdate="updateTime" @ended="end"></audio>
+    <audio :src="currentSong.url" ref="audio" @canplay="canplay" @error="error" @timeupdate="updateTime" @ended="end"></audio>
   </div>
 </template>
 
@@ -228,7 +228,6 @@ export default {
     getLyrics() {
       this.currentSong.getLyrics().then((lyric) => {
         this.currentLyrics = new LyricParser(lyric, this.handleLyrics)
-        console.log(this.currentLyrics.lines)
         if (this.playing) {
           this.currentLyrics.play()
         }
@@ -244,6 +243,9 @@ export default {
     loop() {
       this.$refs.audio.currentTime = 0
       this.$refs.audio.play()
+      if (this.currentLyrics) {
+        this.currentLyrics.seek(0)
+      }
     },
     changePlayMode () {
       const mode = (this.mode + 1) % 3
@@ -264,10 +266,14 @@ export default {
       this.setPlaySequence(list)
     },
     changeAudioCurrentTime(percent) {
-      this.$refs.audio.currentTime = percent * this.currentSong.duration
+      const currentTime = percent * this.currentSong.duration
 
+      this.$refs.audio.currentTime = currentTime
       if (!this.playing) {
         this.togglePlaying()
+      }
+      if (this.currentLyrics) {
+        this.currentLyrics.seek(currentTime * 1000)
       }
     },
     updateTime(event) {
@@ -341,7 +347,13 @@ export default {
       setPlaySequence: 'SET_SEQUENCE_LIST'
     }),
     togglePlaying() {
+      if (!this.songReady) {
+        return
+      }
       this.setPlayingState(!this.playing)
+      if (this.currentLyrics) {
+        this.currentLyrics.togglePlay()
+      }
     },
     prev() {
       if (!this.songReady) {
@@ -404,6 +416,11 @@ export default {
       if (newSong.id === oldSong.id) {
         return
       }
+
+      if (this.currentLyrics) {
+        this.currentLyrics.stop()
+      }
+
       this.$nextTick(() => {
         this.$refs.audio.play()
         this.getLyrics()

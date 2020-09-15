@@ -49,8 +49,13 @@ export default {
 
     normalizeSong (list) {
       const ret = []
-      list.forEach((song) => {
+      list.forEach((song, index) => {
         if (song.songInfo.id && song.songInfo.album.id) {
+          // Due to copyright issue, QQ Music can only play in China mainland.
+          // So I do static mp3 in public folder to mimic multiple playable songs.
+          const publicSongList = ['bu-ai-wo.mp3', 'chou-ba-guai.mp3', 'yan-yuan.mp3', 'yellow.mp3']
+          const publicSongIndex = index % 4
+          song.songInfo.url = publicSongList[publicSongIndex]
           ret.push(songFactory(song.songInfo))
         }
       })
