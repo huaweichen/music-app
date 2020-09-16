@@ -6,6 +6,8 @@ import { commonParams } from './config'
  */
 export function getRecommend() {
   const params = Object.assign({}, commonParams, {
+    '-': 'recom5843519863443307',
+    sign: 'zzafcwkh6soiyx2wycff15c4441255ee9ef959d8dacccc3f88',
     data: {
       comm: { ct: 24 },
       category: { method: 'get_hot_category', param: { qq: '' }, module: 'music.web_category_svr' },
@@ -40,6 +42,26 @@ export function getPlaylist () {
     sortId: 5,
     sin: 0,
     ein: 19
+  })
+
+  return axios.get(url, {
+    params
+  }).then((res) => {
+    return Promise.resolve(res.data)
+  })
+}
+
+export function getSongList(dissid) {
+  const url = '/api/getSongList'
+
+  const params = Object.assign({}, commonParams, {
+    type: 1,
+    json: 1,
+    utf8: 1,
+    onlysong: 0,
+    new_format: 1,
+    disstid: dissid,
+    g_tk_new_20200303: 5381
   })
 
   return axios.get(url, {

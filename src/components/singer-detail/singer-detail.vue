@@ -7,7 +7,7 @@
 <script type="text/ecmascript-6">
 import { mapGetters } from 'vuex'
 import { getSingerDetail } from '@/api/singer'
-import { songFactory } from '../../assets/js/song'
+import { songFactory } from 'common/js/song'
 import MusicList from '@/components/music-list/music-list'
 
 export default {

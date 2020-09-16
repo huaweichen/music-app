@@ -9,6 +9,30 @@ module.exports = {
 
   devServer: {
     before(app) {
+      // QQ Music play list details (Disc)
+      app.get('/api/getSongList', (req, res) => {
+        const url = 'https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg'
+
+        axios.get(url, {
+          headers: {
+            referer: `https://y.qq.com/n/yqq/playlist/${req.query.disstid}.html`,
+            host: 'c.y.qq.com'
+          },
+          params: req.query
+        }).then((response) => {
+          console.log(response.data)
+          if (response.data.code === 0) {
+            const songlist = response.data.cdlist[0].songlist
+            res.json(songlist)
+          } else {
+            res.json(response.data)
+          }
+        }).catch((e) => {
+          console.log('Fail to load /api/getSongList')
+          console.log(e)
+        })
+      })
+
       // QQ Music get lyrics
       app.get('/api/lyrics', (req, res) => {
         const url = 'https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg'
@@ -22,13 +46,14 @@ module.exports = {
           console.log(response.data)
           res.json(response.data)
         }).catch((e) => {
+          console.log('Fail to load /api/lyrics')
           console.log(e)
         })
       })
 
       // QQ Music get recommend tracks
       app.get('/api/getQQRecommendTracks', (req, res) => {
-        const url = 'https://music.myself.com/api/getSingers?_token=xx'
+        const url = 'https://u.y.qq.com/cgi-bin/musics.fcg'
         // Jump to different URL based on "jumptype"
         const jumpTypeUrlMapper = {
           10002: 'https://y.qq.com/n/yqq/album/',
@@ -72,6 +97,7 @@ module.exports = {
             res.json(response)
           }
         }).catch((e) => {
+          console.log('Fail to load /api/getQQRecommendTracks')
           console.log(e)
         })
       })
@@ -97,6 +123,7 @@ module.exports = {
             res.json(data)
           }
         }).catch((e) => {
+          console.log('Fail to load /api/getPlaylist')
           console.log(e)
         })
       })
@@ -118,6 +145,7 @@ module.exports = {
             res.json(data)
           }
         }).catch((e) => {
+          console.log('Fail to load /api/getSingerList')
           console.log(e)
         })
       })
@@ -140,6 +168,7 @@ module.exports = {
             res.json(data)
           }
         }).catch((e) => {
+          console.log('Fail to load /api/getSingerDetail')
           console.log(e)
         })
       })
