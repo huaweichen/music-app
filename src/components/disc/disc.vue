@@ -44,11 +44,10 @@ export default {
       getSongList(this.disc.dissid)
         .then((response) => {
           this.songs = this.normalizeSongs(response)
-          console.log(this.songs)
         })
     },
     normalizeSongs(list) {
-      const ret = list.map((song, index) => {
+      return list.map((song, index) => {
         // Get static music due to copyright in China mainland.
         const publicSongList = ['bu-ai-wo.mp3', 'chou-ba-guai.mp3', 'yan-yuan.mp3', 'yellow.mp3']
         const publicSongIndex = index % 4
@@ -58,7 +57,6 @@ export default {
           return songFactory(song)
         }
       })
-      return ret
     }
   }
 }
