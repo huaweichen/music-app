@@ -32,6 +32,7 @@ export default class Song {
 }
 
 export function songFactory(songInfo) {
+  console.log(songInfo)
   return new Song({
     id: songInfo.id,
     mid: songInfo.mid,

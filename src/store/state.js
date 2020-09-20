@@ -13,7 +13,10 @@ const state = {
   currentIndex: -1, // currently playing in playList
 
   // disc song list
-  disc: {}
+  disc: {},
+
+  // TOP rank list
+  topList: {}
 }
 
 export default state

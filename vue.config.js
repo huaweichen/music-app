@@ -9,6 +9,29 @@ module.exports = {
 
   devServer: {
     before(app) {
+      // QQ Music rank list
+      app.get('/api/getRankList', (req, res) => {
+        const url = 'https://u.y.qq.com/cgi-bin/musics.fcg'
+
+        axios.get(url, {
+          headers: {
+            referer: 'https://u.y.qq.com',
+            host: 'u.y.qq.com'
+          },
+          params: req.query
+        }).then((response) => {
+          console.log(response.data)
+          if (response.data.code === 0 && response.data.toplist.code === 0) {
+            res.json(response.data.toplist.data.group)
+          } else {
+            res.json(response.data)
+          }
+        }).catch((e) => {
+          console.log('Fail to load /api/getRankList')
+          console.log(e)
+        })
+      })
+
       // QQ Music play list details (Disc)
       app.get('/api/getSongList', (req, res) => {
         const url = 'https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg'
