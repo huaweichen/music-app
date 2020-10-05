@@ -38,9 +38,9 @@ export function songFactory(songInfo) {
     mid: songInfo.mid,
     singer: concatenateSingerName(songInfo.singer),
     name: songInfo.subtitle ? songInfo.title + ' - ' + songInfo.subtitle : songInfo.title,
-    album: songInfo.album.title,
+    album: songInfo.album ? songInfo.album.title : songInfo.title,
     duration: songInfo.interval,
-    image: `https://y.gtimg.cn/music/photo_new/T002R300x300M000${songInfo.album.mid}.jpg?max_age=2592000`,
+    image: `https://y.gtimg.cn/music/photo_new/T002R300x300M000${songInfo.album ? songInfo.album.mid : songInfo.albumMid}.jpg?max_age=2592000`,
     url: `/songs/${songInfo.url}`
   })
 }
