@@ -1,6 +1,6 @@
 <template>
   <transition appear name="slide">
-    <music-list :title="title" :bg-image="bgImage" :songs="songs"></music-list>
+    <music-list :title="title" :bg-image="bgImage" :songs="songList" :rank="true"></music-list>
   </transition>
 </template>
 
@@ -8,8 +8,14 @@
 import MusicList from '@/components/music-list/music-list'
 import { mapGetters } from 'vuex'
 import { songFactory } from 'common/js/song'
+import { getRankSongList } from '@/api/rank'
 
 export default {
+  data() {
+    return {
+      songList: []
+    }
+  },
   components: {
     MusicList
   },
@@ -20,19 +26,35 @@ export default {
     bgImage() {
       return this.topList.mbHeadPicUrl
     },
-    songs() {
+    ...mapGetters([
+      'topList'
+    ])
+  },
+  created() {
+    if (!this.topList.topId) {
+      this.$router.push('/rank')
+      return
+    }
+
+    getRankSongList(this.topList.topId).then((res) => {
+      if (typeof res.data !== 'undefined' && res.data.length > 0) {
+        this.songList = this.normalizeSongList(res.data)
+      }
+    })
+  },
+  methods: {
+    normalizeSongList(songList) {
       const ret = []
-      this.topList.song.forEach((item, index) => {
+
+      songList.forEach((item, index) => {
         const publicSongList = ['bu-ai-wo.mp3', 'chou-ba-guai.mp3', 'yan-yuan.mp3', 'yellow.mp3']
         const publicSongIndex = index % 4
         item.url = publicSongList[publicSongIndex]
         ret.push(songFactory(item))
       })
+
       return ret
-    },
-    ...mapGetters([
-      'topList'
-    ])
+    }
   }
 }
 </script>

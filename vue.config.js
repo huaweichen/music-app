@@ -195,6 +195,29 @@ module.exports = {
           console.log(e)
         })
       })
+
+      // QQ Music get singer detail
+      app.get('/api/getRankSongList', (req, res) => {
+        const url = 'https://u.y.qq.com/cgi-bin/musics.fcg'
+        axios.get(url, {
+          params: req.query
+        }).then((response) => {
+          const data = response.data
+          console.log(data)
+          if (
+            data.code === 0 &&
+            data.detail.code === 0 &&
+            data.detail.data.songInfoList.length > 0
+          ) {
+            res.json({ data: data.detail.data.songInfoList })
+          } else {
+            res.json(data)
+          }
+        }).catch((e) => {
+          console.log('Fail to load /api/getSingerDetail')
+          console.log(e)
+        })
+      })
     }
   }
 }

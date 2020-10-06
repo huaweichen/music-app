@@ -55,7 +55,6 @@ export default {
   },
   created() {
     getRankList().then((response) => {
-      console.log(response)
       this.rankList = response
     })
   },

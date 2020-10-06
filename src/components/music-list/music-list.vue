@@ -22,7 +22,7 @@
       class="list"
       ref="list">
       <div class="song-list-wrapper">
-        <song-list :songs="songs" @selectSong="selectSong"></song-list>
+        <song-list :songs="songs" @selectSong="selectSong" :rank="rank"></song-list>
       </div>
       <div class="loading-container" v-show="!songs.length">
         <loading></loading>
@@ -51,6 +51,10 @@ export default {
     bgImage: {
       type: String,
       default: ''
+    },
+    rank: {
+      type: Boolean,
+      default: false
     },
     songs: {
       type: Array,
