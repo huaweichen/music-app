@@ -218,6 +218,54 @@ module.exports = {
           console.log(e)
         })
       })
+
+      app.get('/api/getHotKey', (req, res) => {
+        const url = 'https://c.y.qq.com/splcloud/fcgi-bin/gethotkey.fcg'
+        axios.get(url, {
+          headers: {
+            referer: 'https://c.y.qq.com',
+            host: 'c.y.qq.com'
+          },
+          params: req.query
+        }).then((response) => {
+          const data = response.data
+          console.log(data)
+          if (
+            data.code === 0 &&
+            typeof data.hotkey !== 'undefined' &&
+            data.hotkey.length > 0
+          ) {
+            res.json(data.hotkey)
+          } else {
+            res.json(data)
+          }
+        }).catch((e) => {
+          console.log('Fail to load /api/getHotKey')
+          console.log(e)
+        })
+      })
+
+      app.get('/api/search', (req, res) => {
+        const url = 'https://c.y.qq.com/soso/fcgi-bin/client_search_cp'
+        axios.get(url, {
+          headers: {
+            referer: 'https://c.y.qq.com',
+            host: 'c.y.qq.com'
+          },
+          params: req.query
+        }).then((response) => {
+          const data = response.data
+          console.log(data)
+          if (data.code === 0) {
+            res.json({ code: data.code, song: data.data.song, zhida: data.data.zhida })
+          } else {
+            res.json(data)
+          }
+        }).catch((e) => {
+          console.log('Fail to load /api/search')
+          console.log(e)
+        })
+      })
     }
   }
 }

@@ -45,7 +45,7 @@ export function songFactory(songInfo) {
   })
 }
 
-function concatenateSingerName (singer) {
+export function concatenateSingerName (singer) {
   if (!singer) {
     return 'Anonymous'
   }
