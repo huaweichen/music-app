@@ -26,6 +26,10 @@ export default {
     listenScroll: {
       type: Boolean,
       default: false
+    },
+    pullUpRefresh: {
+      type: Boolean,
+      default: false
     }
   },
   mounted() {
@@ -48,6 +52,14 @@ export default {
         const that = this
         this.scroll.on('scroll', (position) => {
           that.$emit('scroll', position)
+        })
+      }
+
+      if (this.pullUpRefresh) {
+        this.scroll.on('scrollEnd', () => {
+          if (this.scroll.y <= (this.scroll.maxScrollY + 50)) {
+            this.$emit('scrollToEnd')
+          }
         })
       }
     },

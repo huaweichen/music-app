@@ -17,9 +17,10 @@ export function getHotKey() {
  * @param query query string
  * @param page page for loading
  * @param showSinger jump to song or singer
+ * @param perPage load per page
  * @returns {Promise<*>}
  */
-export function search(query, page, showSinger) {
+export function search(query, page, showSinger, perPage) {
   const params = Object.assign({}, commonParams, {
     ct: 24,
     qqmusic_ver: 1298,
@@ -33,7 +34,7 @@ export function search(query, page, showSinger) {
     lossless: 0,
     flag_qc: 0,
     p: page,
-    n: 10,
+    n: perPage,
     w: query
   })
   return axios.get('/api/search', {

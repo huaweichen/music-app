@@ -1,5 +1,5 @@
 <template>
-  <div class="suggest">
+  <scroll class="suggest" :data="result" :pull-up-refresh="pullUpRefresh" @scrollToEnd="searchMore" ref="suggest">
     <ul class="suggest-list">
       <li class="suggest-item" v-for="(item, key) in result" :key="key">
         <div class="icon">
@@ -9,15 +9,19 @@
           <p class="text" v-html="getDisplayName(item)"></p>
         </div>
       </li>
+      <loading v-show="hasMoreToLoad" title=""></loading>
     </ul>
-  </div>
+  </scroll>
 </template>
 
 <script type="text/ecmascript-6">
 import { search } from '@/api/search'
 import { concatenateSingerName } from 'common/js/song'
+import Scroll from '@/base/scroll/scroll'
+import Loading from '@/base/loading/loading'
 
 const TYPE_SINGER = 'singer'
+const PER_PAGE = 20
 
 export default {
   props: {
@@ -27,42 +31,73 @@ export default {
     },
     showSinger: {
       type: Boolean,
-      default: true
+      default: false
     }
+  },
+  components: {
+    Scroll,
+    Loading
   },
   data() {
     return {
       page: 1,
-      result: []
+      result: [],
+      pullUpRefresh: true,
+      hasMoreToLoad: true
     }
   },
   methods: {
+    searchMore() {
+      if (!this.hasMoreToLoad) {
+        return
+      }
+
+      this.page++
+      search(this.query, this.page, this.showSinger, PER_PAGE).then((response) => {
+        console.log(response)
+        this.result = this.result.concat(this.getResult(response))
+        this.checkHasMore(response.song)
+      })
+    },
     getDisplayName(item) {
       if (item.type === TYPE_SINGER) {
         return item.singername
       } else {
-        return `${item.songname} - ${concatenateSingerName(item.singer)}`
+        return `${item.name} - ${concatenateSingerName(item.singer)}`
       }
     },
     getIconClass(item) {
       return item.type === TYPE_SINGER ? 'icon-mine' : 'icon-music'
     },
     search() {
-      search(this.query, this.page, this.showSinger).then((response) => {
+      this.page = 1
+      this.hasMoreToLoad = true
+      this.$refs.suggest.scrollTo(0, 0) // first load scroll to end.
+      search(this.query, this.page, this.showSinger, PER_PAGE).then((response) => {
         if (response.code !== 0) {
           this.result = []
         }
 
-        let ret = []
-        if (response.zhida && typeof response.zhida.zhida_singer.singerID !== 'undefined') {
-          ret.push({ ...response.zhida.zhida_singer, ...{ type: TYPE_SINGER } })
-        }
-        if (response.song && response.song.list.length > 0) {
-          ret = ret.concat(response.song.list)
-        }
-        console.log(ret)
-        this.result = ret
+        this.checkHasMore(response.song)
+        this.result = this.getResult(response)
       })
+    },
+    getResult(data) {
+      let ret = []
+      if (data.zhida && typeof data.zhida.zhida_singer !== 'undefined') {
+        ret.push({ ...data.zhida.zhida_singer, ...{ type: TYPE_SINGER } })
+      }
+      if (data.song && data.song.list.length > 0) {
+        ret = ret.concat(data.song.list)
+      }
+
+      console.log(ret)
+      return ret
+    },
+    checkHasMore(songs) {
+      if (!songs.list.length || (songs.curnum + songs.curpage * PER_PAGE) > songs.totalnum) {
+        this.hasMoreToLoad = false
+      }
     }
   },
   watch: {
