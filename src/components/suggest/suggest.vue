@@ -1,7 +1,15 @@
 <template>
-  <scroll class="suggest" :data="result" :pull-up-refresh="pullUpRefresh" @scrollToEnd="searchMore" ref="suggest">
+  <scroll
+    class="suggest"
+    :data="result"
+    :pull-up-refresh="pullUpRefresh"
+    :beforeScroll="beforeScroll"
+    @beforeScroll="hideKeypad"
+    @scrollToEnd="searchMore"
+    ref="suggest"
+  >
     <ul class="suggest-list">
-      <li class="suggest-item" v-for="(item, key) in result" :key="key">
+      <li @click="selectItem(item)" class="suggest-item" v-for="(item, key) in result" :key="key">
         <div class="icon">
           <i :class="getIconClass(item)"></i>
         </div>
@@ -11,6 +19,9 @@
       </li>
       <loading v-show="hasMoreToLoad" title=""></loading>
     </ul>
+    <div class="no-result-wrapper" v-show="!hasMoreToLoad && !result.length">
+      <no-result title="歉 没有您要搜索的结果"></no-result>
+    </div>
   </scroll>
 </template>
 
@@ -19,6 +30,9 @@ import { search } from '@/api/search'
 import { concatenateSingerName } from 'common/js/song'
 import Scroll from '@/base/scroll/scroll'
 import Loading from '@/base/loading/loading'
+import NoResult from '@/base/no-result/no-result'
+import Singer from '@/assets/js/singer'
+import { mapMutations, mapActions } from 'vuex'
 
 const TYPE_SINGER = 'singer'
 const PER_PAGE = 20
@@ -31,22 +45,47 @@ export default {
     },
     showSinger: {
       type: Boolean,
-      default: false
+      default: true
     }
   },
   components: {
     Scroll,
-    Loading
+    Loading,
+    NoResult
   },
   data() {
     return {
       page: 1,
       result: [],
       pullUpRefresh: true,
-      hasMoreToLoad: true
+      hasMoreToLoad: true,
+      beforeScroll: true
     }
   },
   methods: {
+    hideKeypad() {
+      this.$emit('hideKeypad')
+    },
+    selectItem(item) {
+      if (item.type === TYPE_SINGER) {
+        const singer = new Singer({
+          id: item.singerID,
+          mid: item.singerMID,
+          name: item.singerName,
+          avatar: item.singerPic
+        })
+
+        this.$router.push({
+          path: `/search/${singer.id}`
+        })
+        this.setSinger(singer)
+      } else {
+        const randomSongId = Math.floor(Math.random() * 4)
+        const publicSongList = ['bu-ai-wo.mp3', 'chou-ba-guai.mp3', 'yan-yuan.mp3', 'yellow.mp3']
+        item.url = '/songs/' + publicSongList[randomSongId]
+        this.insertSong(item)
+      }
+    },
     searchMore() {
       if (!this.hasMoreToLoad) {
         return
@@ -54,14 +93,13 @@ export default {
 
       this.page++
       search(this.query, this.page, this.showSinger, PER_PAGE).then((response) => {
-        console.log(response)
         this.result = this.result.concat(this.getResult(response))
         this.checkHasMore(response.song)
       })
     },
     getDisplayName(item) {
       if (item.type === TYPE_SINGER) {
-        return item.singername
+        return item.singerName
       } else {
         return `${item.name} - ${concatenateSingerName(item.singer)}`
       }
@@ -98,7 +136,13 @@ export default {
       if (!songs.list.length || (songs.curnum + songs.curpage * PER_PAGE) > songs.totalnum) {
         this.hasMoreToLoad = false
       }
-    }
+    },
+    ...mapMutations({
+      setSinger: 'SET_SINGER'
+    }),
+    ...mapActions([
+      'insertSong'
+    ])
   },
   watch: {
     query(newQuery) {
