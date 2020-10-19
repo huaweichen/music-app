@@ -20,14 +20,14 @@
       <loading v-show="hasMoreToLoad" title=""></loading>
     </ul>
     <div class="no-result-wrapper" v-show="!hasMoreToLoad && !result.length">
-      <no-result title="歉 没有您要搜索的结果"></no-result>
+      <no-result title="抱歉 没有您要搜索的结果"></no-result>
     </div>
   </scroll>
 </template>
 
 <script type="text/ecmascript-6">
 import { search } from '@/api/search'
-import { concatenateSingerName } from 'common/js/song'
+import { concatenateSingerName, songFactory } from 'common/js/song'
 import Scroll from '@/base/scroll/scroll'
 import Loading from '@/base/loading/loading'
 import NoResult from '@/base/no-result/no-result'
@@ -82,9 +82,12 @@ export default {
       } else {
         const randomSongId = Math.floor(Math.random() * 4)
         const publicSongList = ['bu-ai-wo.mp3', 'chou-ba-guai.mp3', 'yan-yuan.mp3', 'yellow.mp3']
-        item.url = '/songs/' + publicSongList[randomSongId]
-        this.insertSong(item)
+        item.url = publicSongList[randomSongId]
+        this.insertSong(songFactory(item))
       }
+
+      // save to search history
+      this.$emit('selectedSongFromSearch')
     },
     searchMore() {
       if (!this.hasMoreToLoad) {
