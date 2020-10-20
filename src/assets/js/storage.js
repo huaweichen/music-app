@@ -18,8 +18,23 @@ export function loadSearchHistory () {
   return storage.get(SEARCH_KEY, [])
 }
 
+export function deleteSearchHistory (query) {
+  const currentSearches = storage.get(SEARCH_KEY, [])
+  deleteFromArray(currentSearches, (searchItem) => {
+    return searchItem === query
+  })
+  storage.set(SEARCH_KEY, currentSearches)
+
+  return currentSearches
+}
+
+export function clearAllSearch () {
+  storage.remove(SEARCH_KEY)
+  return []
+}
+
 /**
- *
+ * Add into an array. Consider existing value.
  * @param arr
  * @param val
  * @param compare Compare current array has current search value.
@@ -39,5 +54,17 @@ function insertArray(arr, val, compare, maxLength) {
 
   if (maxLength && arr.length > maxLength) {
     arr.pop()
+  }
+}
+
+/**
+ * Delete from an array
+ * @param arr
+ * @param compare Compare current array has current search value.
+ */
+function deleteFromArray(arr, compare) {
+  const index = arr.findIndex(compare)
+  if (index > -1) {
+    arr.splice(index, 1)
   }
 }

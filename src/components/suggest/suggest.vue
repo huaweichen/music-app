@@ -63,6 +63,9 @@ export default {
     }
   },
   methods: {
+    refresh() {
+      this.$refs.suggest.refreshScroll()
+    },
     hideKeypad() {
       this.$emit('hideKeypad')
     },
@@ -132,11 +135,10 @@ export default {
         ret = ret.concat(data.song.list)
       }
 
-      console.log(ret)
       return ret
     },
     checkHasMore(songs) {
-      if (!songs.list.length || (songs.curnum + songs.curpage * PER_PAGE) > songs.totalnum) {
+      if ((typeof songs.list !== 'undefined' && !songs.list.length) || (songs.curnum + songs.curpage * PER_PAGE) > songs.totalnum) {
         this.hasMoreToLoad = false
       }
     },

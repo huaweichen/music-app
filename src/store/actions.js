@@ -1,7 +1,7 @@
 import * as types from './mutation-types'
 import { playMode } from '@/assets/js/config'
 import { shuffle } from '@/assets/js/util'
-import { saveSearchHistory } from '@/assets/js/storage'
+import { saveSearchHistory, deleteSearchHistory, clearAllSearch } from '@/assets/js/storage'
 
 function findIndex(list, song) {
   return list.findIndex((item) => {
@@ -85,4 +85,12 @@ export const insertSong = function ({ commit, state }, song) {
 
 export const saveSearchHistoryAction = function ({ commit }, query) {
   commit(types.SET_SEARCH_HISTORY, saveSearchHistory(query))
+}
+
+export const deleteSearchHistoryAction = function ({ commit }, query) {
+  commit(types.SET_SEARCH_HISTORY, deleteSearchHistory(query))
+}
+
+export const clearAllSearchHistoryAction = function ({ commit }) {
+  commit(types.SET_SEARCH_HISTORY, clearAllSearch())
 }
